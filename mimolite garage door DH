@@ -35,33 +35,33 @@
 metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "MIMOlite Garage Door Controller 02/25/2020", namespace: "Hubitat", author: "scgs350") {
-        capability "Momentary"
-        capability "Relay Switch"
+	capability "Momentary"
+	capability "Relay Switch"
 	capability "Polling"
-        capability "Refresh"
-        capability "Switch"
-        capability "Sensor"
-        capability "Contact Sensor"
-        capability "Configuration"
+	capability "Refresh"
+	capability "Switch"
+	capability "Sensor"
+	capability "Contact Sensor"
+	capability "Configuration"
 	capability "Actuator"
 	capability "Door Control"
 	capability "Garage Door Control"
-        capability "Health Check"
-        capability "Lock"
+	capability "Health Check"
+	capability "Lock"
 
   	attribute "powered", "string"
-        attribute "doorstate", "string"
-        attribute "switch", "string"
-        attribute "setSwitchDelay", "number"
-        attribute "door_timer", "number"
+	attribute "doorstate", "string"
+	attribute "switch", "string"
+	attribute "setSwitchDelay", "number"
+	attribute "door_timer", "number"
         
-        command "open"
-        command "close"
-        command "lock"
-        command "unlock"
+	command "open"
+	command "close"
+	command "lock"
+	command "unlock"
 	command "on"
 	command "off"        
-        command "setSwitchDelay",[[title:"momentary switch delay", name:"select momentary switch delay 0(disabled),10,20,30 (*100ms) default 30(3 sec)", type:"NUMBER", description:"momentary switch delay", constraints:["NUMBER"]]]        
+	command "setSwitchDelay",[[title:"momentary switch delay", name:"select momentary switch delay 0(disabled),10,20,30 (*100ms) default 30(3 sec)", type:"NUMBER", description:"momentary switch delay", constraints:["NUMBER"]]]        
 //        command "getSwitchDelay"       
         
 fingerprint mfr: "132", deviceId: "273", prod:"1107", inClusters: "0x72,0x86,0x71,0x30,0x31,0x35,0x70,0x85,0x25", deviceJoinName: "mimolite garage door"
@@ -87,28 +87,28 @@ def setSwitchDelay(value) {
         sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
         log.info "set default 0 sec switch delay, momnentay state disabled"    
         return delayBetween([
-		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 11, size: 1)),
-		secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
+			secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 11, size: 1)),
+			secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
         ],500) }
     if   (value == 10) {
         sendEvent(name: "momentary_switch_delay", value: "1 sec", displayed: true)
         log.info "momnentay switch state enabled 1 sec"     
         return delayBetween([
- 		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 10, parameterNumber: 11, size: 1)),
-		secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),   
+ 			secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 10, parameterNumber: 11, size: 1)),
+			secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),   
         ],500) }
     if (value == 20) {
         sendEvent(name: "momentary_switch_delay", value: "2 sec", displayed: true)
         log.info "momnentay switch state enabled 2 sec"    
         return delayBetween([
-  		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
+  			secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
 	        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
         ],500) }
     if (value == 30) {
         sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
         log.info "momnentay switch state enabled 3 sec"      
         return delayBetween([
-		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
+			secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
 	        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)), 
         ],500) }
 }
@@ -129,7 +129,7 @@ def cmd = zwave.parse(description, [0x72: 1, 0x86: 1, 0x71: 1, 0x30: 1, 0x31: 3,
 	if (cmd.CMD == "7105") {				
 //Mimo sent a power loss report
 		log.debug "Device lost power"
-    		sendEvent(name: "powered", value: "powerOff", descriptionText: "$device.displayName lost power")
+		sendEvent(name: "powered", value: "powerOff", descriptionText: "$device.displayName lost power")
 	} else {
     	sendEvent(name: "powered", value: "powerOn", descriptionText: "$device.displayName regained power")
     }
@@ -180,7 +180,7 @@ def zwaveEvent(hubitat.zwave.commands.alarmv1.AlarmReport cmd)
 }
 
 def zwaveEvent(hubitat.zwave.Command cmd) {
-	// Handles all Z-Wave commands we aren't interested in
+// Handles all Z-Wave commands we aren't interested in
 	[:]
 }
         
@@ -205,37 +205,37 @@ def set_doorstate_to_closed() {
 
 def turnon() {
 	return delayBetween([ 
-        	zwave.basicV1.basicSet(value: 0x00).format(),        
+		zwave.basicV1.basicSet(value: 0x00).format(),        
 		zwave.basicV1.basicSet(value: 0xFF).format(),
-        	zwave.basicV1.basicGet().format()                
-    	],1000) }  
+ 		zwave.basicV1.basicGet().format()                
+	],1000) }  
 
 def on() {
 	if (device.currentValue("doorstate") != "moving")
 	if (device.currentValue("lock") == "Door is unlocked") {
-        	log.debug "Sending on event to open/close door"
-        	sendEvent(name: "doorstate", value: "moving")
-        	sendEvent(name: "switch", value: "on")    
-        	turnon()
+		log.debug "Sending on event to open/close door"
+   		sendEvent(name: "doorstate", value: "moving")
+		sendEvent(name: "switch", value: "on")    
+		turnon()
 	}
 	else {
-        log.debug "not opening door is moving or locked"  
+		log.debug "not opening door is moving or locked"  
 	}        
 }    
 
 def off() {
 	log.debug "Sending off event to close door"
+	sendEvent(name: "switch", value: "off") 
 	return delayBetween([
         	zwave.basicV1.basicSet(value: 0x00).format(),
         	zwave.basicV1.basicGet().format()
-    	],500)  
-	sendEvent(name: "switch", value: "off")    
+	],500)     
 }
 
 def open() {
     if (device.currentValue("contact") == "closed")
     if (device.currentValue("lock") == "Door is unlocked") {
-        log.debug "Sending open event to open garage door"
+		log.debug "Sending open event to open garage door"
         sendEvent(name: "doorstate", value: "opening")
         turnon()
     }    
@@ -247,8 +247,8 @@ def open() {
 def close() {
 	if (device.currentValue("doorstate") == "Door is open, close/on to close") {
 		log.debug "Sending close event to close garage door"
-        	sendEvent(name: "doorstate", value: "closing")
-        	turnon()
+		sendEvent(name: "doorstate", value: "closing")
+		turnon()
     	}
 	else {
         log.debug "Not closing door since it is already closed"        
@@ -286,41 +286,41 @@ def refresh() {
 	return delayBetween([
 		secureCmd(zwave.switchBinaryV1.switchBinaryGet()),
 		secureCmd(zwave.sensorBinaryV1.sensorBinaryGet()),
-        	secureCmd(zwave.basicV1.basicGet()),
+		secureCmd(zwave.basicV1.basicGet()),
 // get alert thresholds setting        
-        	secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 8)),
+		secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 8)),
 // get alarms setting        
-        	secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 9)), 
+		secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 9)), 
 // get momentary switch setting        
-        	secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
-    	],500)
+		secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
+	],500)
 }
 
 def logsOn() {
-    	log.warn "debug logging enabled..."
-    	device.updateSetting("logEnable",[value:"true",type:"bool"])
+	log.warn "debug logging enabled..."
+	device.updateSetting("logEnable",[value:"true",type:"bool"])
 }
 
 def logsOff() { 
-    	log.warn "debug logging disabled..."  
-    	device.updateSetting("logEnable",[value:"false",type:"bool"])
+	log.warn "debug logging disabled..."  
+  	device.updateSetting("logEnable",[value:"false",type:"bool"])
 }
 
 def configure() {
 	log.debug "Configuring defaults" //setting up to monitor power alarm and actuator duration 
-    	log.info "momnentay switch state enabled 3 sec"  
-    	sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
+	log.info "momnentay switch state enabled 3 sec"  
+	sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
 	return delayBetween([
 // enable analog alert thresholds for door contacts 0 disables   
-        	secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
+		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
 // tell device to send multivalue sensor updates every 1 = 10 seconds 
-       	 	secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 5, parameterNumber: 9, size: 1)),
+		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 5, parameterNumber: 9, size: 1)),
 // sets momentary switch set 0-30 0 (disabled) 10 = 1 seconds configured default for 30 (3 sec)      
-        	secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
+   		secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
 // enable alarms to be sent to hub  
-        	secureCmd(zwave.associationV1.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId])),
+		secureCmd(zwave.associationV1.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId])),
 // enable multivalue sensor updates to be sent to hub
-        	secureCmd(zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId])),
+ 		secureCmd(zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId])),
 	],500) 
     refresh()
 }
@@ -335,9 +335,9 @@ def zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) {
 }
 
 private secureCmd(cmd) {
-    	if (getDataValue("zwaveSecurePairingComplete") == "true") {
+	if (getDataValue("zwaveSecurePairingComplete") == "true") {
 		return zwave.securityV1.securityMessageEncapsulation().encapsulate(cmd).format()
-    	} else {
+	} else {
 		return cmd.format()
     }	
 }       
