@@ -30,11 +30,11 @@
  *  01-01-2020 : fixed the doorstate opening/closing with a send command in the refresh and setting refresh delay in RM made backwards compatible with stock Hubitat DH
  *  01-08-2020 : added door open/close timing and software lock for extra security to disable door opening
  *  01-11-2020 : added fingerprint, setable relay delay, added door lock funtion to on & push, fixed a bug with momentary switch delay setting
- *  02-25-2020 : , set the momentary switch delay setting as default 30 (3 sec) if you want to disable and manually control the on off function select 0 (disabled) in device settings
+ *  02-26-2020 : , set the momentary switch delay setting as default 30 (3 sec) if you want to disable and manually control the on off function select 0 (disabled) in device settings
  */
 metadata {
 	// Automatically generated. Make future change here.
-    definition (name: "MIMOlite Garage Door Controller 02/25/2020", namespace: "Hubitat", author: "scgs350") {
+    definition (name: "MIMOlite Garage Door Controller 02/26/2020", namespace: "Hubitat", author: "scgs350") {
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
