@@ -199,13 +199,13 @@ def unlock() {
 def set_doorstate_to_opened() {
     sendEvent(name:"doorstate", value:"Door is open, close/on to close")
     sendEvent(name: "switch", value: "off") 
-    sendEvent(name: "contact", value: "open")
+    sendEvent(name: "door", value: "open")
 }
 
 def set_doorstate_to_closed() {
     sendEvent(name:"doorstate", value:"Door is closed, open/on to open")
     sendEvent(name: "switch", value: "off") 
-    sendEvent(name: "contact", value: "closed")
+    sendEvent(name: "door", value: "closed")
 }
 
 def turnon() {
@@ -241,7 +241,8 @@ def open() {
     if (device.currentValue("contact") == "closed")
     if (device.currentValue("lock") == "Door is unlocked") {
         log.debug "Sending open event to open garage door"
-        sendEvent(name: "doorstate", value: "opening")
+        sendEvent(name: "doorstate", value: "moving")
+	sendEvent(name: "door", value: "opening")
         turnon()
     }    
     else {
@@ -251,11 +252,10 @@ def open() {
 
 def close() {
     if (device.currentValue("contact") == "open")
-    if (device.currentValue("doorstate") != "opening")
-    if (device.currentValue("doorstate") != "closing")
     if (device.currentValue("doorstate") != "moving") {
         log.debug "Sending close event to close garage door"
-        sendEvent(name: "doorstate", value: "closing")
+        sendEvent(name: "doorstate", value: "moving")
+	sendEvent(name: "door", value: "closing")
         turnon()
     }
     else {
@@ -267,12 +267,15 @@ def push() {
     if (device.currentValue("lock") == "Door is unlocked") 
     if (device.currentValue("contact") == "closed") {
         log.debug "Sending open event to open garage door"
-        sendEvent(name: "doorstate", value: "opening")
+        sendEvent(name: "doorstate", value: "moving")
+	sendEvent(name: "door", value: "opening")
         turnon()
         }
-    if (device.currentValue("doorstate") == "Door is open, close/on to close") {
+    if (device.currentValue("contact") == "open")
+    if (device.currentValue("doorstate") != "moving") {
         log.debug "Sending close event to close garage door"
-        sendEvent(name: "doorstate", value: "closing")
+        sendEvent(name: "doorstate", value: "moving")
+	sendEvent(name: "door", value: "closing")
         turnon()
     }      
     else {   
