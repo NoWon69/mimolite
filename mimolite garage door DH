@@ -250,13 +250,16 @@ def open() {
 }
 
 def close() {
-    if (device.currentValue("doorstate") == "Door is open, close/on to close") {
+    if (device.currentValue("contact") == "open")
+    if (device.currentValue("doorstate") != "opening")
+    if (device.currentValue("doorstate") != "closing")
+    if (device.currentValue("doorstate") != "moving") {
         log.debug "Sending close event to close garage door"
         sendEvent(name: "doorstate", value: "closing")
         turnon()
     }
     else {
-        log.debug "Not closing door since it is already closed"        
+        log.debug "Not closing door since it is already closed or in transit"        
     }
 }
 
