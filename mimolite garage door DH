@@ -197,7 +197,8 @@ def unlock() {
 
 def set_doorstate_to_opened() {
     sendEvent(name:"doorstate", value:"Door is open, close/on to close")
-    sendEvent(name: "switch", value: "off")     
+    sendEvent(name: "switch", value: "off") 
+    sendEvent(name: "contact", value: "open")
 }
 
 def set_doorstate_to_closed() {
