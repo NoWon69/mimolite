@@ -227,11 +227,11 @@ def on() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "opening")
 	sendEvent(name: "switch", value: "on")
+        return delayBetween([      
+            zwave.basicV1.basicSet(value: 0xFF).format(),
+            zwave.basicV1.basicGet().format()                
+        ],1000)
 	runIn(timer(), set_doorstate_to_opened)
-    return delayBetween([      
-        zwave.basicV1.basicSet(value: 0xFF).format(),
-        zwave.basicV1.basicGet().format()                
-    ],1000)  
         }
     if (device.currentValue("contact") == "open")
     if (device.currentValue("doorstate") != "moving") {
@@ -239,12 +239,12 @@ def on() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "closing")
 	sendEvent(name: "switch", value: "on")
+        return delayBetween([      
+            zwave.basicV1.basicSet(value: 0xFF).format(),
+            zwave.basicV1.basicGet().format()                
+        ],1000)
 	runIn(timer(), set_doorstate_to_closed)
-    return delayBetween([      
-        zwave.basicV1.basicSet(value: 0xFF).format(),
-        zwave.basicV1.basicGet().format()                
-    ],1000)  
-    }      
+    }
     else {   
         log.debug "no cmd sent, door is locked or moving"
     }
