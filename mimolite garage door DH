@@ -218,18 +218,33 @@ def turnon() {
     ],1000) }  
 
 def on() {
-    if (device.currentValue("doorstate") != "moving")
-    if (device.currentValue("lock") == "Door is unlocked") {
-        log.debug "Sending on event to open/close door"
+    if (device.currentValue("lock") == "Door is unlocked") 
+    if (device.currentValue("contact") == "closed") {
+        log.debug "Sending open event to open garage door"
         sendEvent(name: "doorstate", value: "moving")
-        sendEvent(name: "switch", value: "on")    
-        turnon()
+	sendEvent(name: "door", value: "opening")
+	sendEvent(name: "switch", value: "on") 
+    return delayBetween([      
+        zwave.basicV1.basicSet(value: 0xFF).format(),
+        zwave.basicV1.basicGet().format()                
+    ],1000) }  
+        }
+    if (device.currentValue("contact") == "open")
+    if (device.currentValue("doorstate") != "moving") {
+        log.debug "Sending close event to close garage door"
+        sendEvent(name: "doorstate", value: "moving")
+	sendEvent(name: "door", value: "closing")
+	sendEvent(name: "switch", value: "on") 
+    return delayBetween([      
+        zwave.basicV1.basicSet(value: 0xFF).format(),
+        zwave.basicV1.basicGet().format()                
+    ],1000) }  
+    }      
+    else {   
+        log.debug "no cmd sent, door is locked or moving"
     }
-    else {
-        log.debug "not opening door is moving or locked"  
-    }        
-}    
-
+}        
+    
 def off() {
     log.debug "Sending off event to close door"
     sendEvent(name: "switch", value: "off")  
