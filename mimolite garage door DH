@@ -34,7 +34,7 @@
  */
 metadata {
 	// Automatically generated. Make future change here.
-    definition (name: "MIMOlite Garage Door Controller 02/27/2020", namespace: "Hubitat", author: "scgs350") {
+    definition (name: "MIMOlite Garage Door Controller 02/28/2020", namespace: "Hubitat", author: "scgs350") {
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
@@ -215,7 +215,8 @@ def turnon() {
         zwave.basicV1.basicSet(value: 0x00).format(),        
         zwave.basicV1.basicSet(value: 0xFF).format(),
         zwave.basicV1.basicGet().format()                
-    ],1000) }  
+    ],1000) 
+}  
 
 def on() {
     if (device.currentValue("lock") == "Door is unlocked") 
@@ -228,7 +229,7 @@ def on() {
     return delayBetween([      
         zwave.basicV1.basicSet(value: 0xFF).format(),
         zwave.basicV1.basicGet().format()                
-    ],1000) }  
+    ],1000)  
         }
     if (device.currentValue("contact") == "open")
     if (device.currentValue("doorstate") != "moving") {
@@ -240,7 +241,7 @@ def on() {
     return delayBetween([      
         zwave.basicV1.basicSet(value: 0xFF).format(),
         zwave.basicV1.basicGet().format()                
-    ],1000) }  
+    ],1000)  
     }      
     else {   
         log.debug "no cmd sent, door is locked or moving"
