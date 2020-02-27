@@ -124,9 +124,9 @@ def door_timer() {
 def parse(String description) {
 // log.debug "description is: ${description}"
     def result = null
-    def cmd = zwave.parse(description, [0x72: 1, 0x86: 1, 0x71: 1, 0x30: 1, 0x31: 5, 0x35: 1, 0x70: 1, 0x85: 1, 0x25: 1, 0x03: 1, 0x20: 1, 0x84: 1])
+//    def cmd = zwave.parse(description, [0x72: 1, 0x86: 1, 0x71: 1, 0x30: 1, 0x31: 5, 0x35: 1, 0x70: 1, 0x85: 1, 0x25: 1, 0x03: 1, 0x20: 1, 0x84: 1])
 //    def cmd = zwave.parse(description, [0x72: 1, 0x86: 1, 0x71: 1, 0x30: 1, 0x31: 3, 0x35: 1, 0x70: 1, 0x85: 1, 0x25: 1, 0x03: 1, 0x20: 1, 0x84: 1])
-//    def cmd = zwave.parse(description, [0x20: 1, 0x84: 1, 0x30: 1, 0x70: 1, 0x31: 5])
+    def cmd = zwave.parse(description, [0x20: 1, 0x84: 1, 0x30: 1, 0x70: 1, 0x31: 5])
 //log.debug "command value is: $cmd.CMD"
     if (cmd.CMD == "7105") {				
 //Mimo sent a power loss report
@@ -223,7 +223,8 @@ def on() {
         log.debug "Sending open event to open garage door"
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "opening")
-	sendEvent(name: "switch", value: "on") 
+	sendEvent(name: "switch", value: "on")
+	runIn(timer(), set_doorstate_to_opened)
     return delayBetween([      
         zwave.basicV1.basicSet(value: 0xFF).format(),
         zwave.basicV1.basicGet().format()                
@@ -234,7 +235,8 @@ def on() {
         log.debug "Sending close event to close garage door"
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "closing")
-	sendEvent(name: "switch", value: "on") 
+	sendEvent(name: "switch", value: "on")
+	runIn(timer(), set_doorstate_to_closed)
     return delayBetween([      
         zwave.basicV1.basicSet(value: 0xFF).format(),
         zwave.basicV1.basicGet().format()                
@@ -261,6 +263,7 @@ def open() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "opening")
         turnon()
+	runIn(timer(), set_doorstate_to_opened)
     }    
     else {
         log.debug "not opening door is already open or locked"
@@ -274,6 +277,7 @@ def close() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "closing")
         turnon()
+	runIn(timer(), set_doorstate_to_closed)
     }
     else {
         log.debug "Not closing door since it is already closed or in transit"        
@@ -287,6 +291,7 @@ def push() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "opening")
         turnon()
+	runIn(timer(), set_doorstate_to_opened)
         }
     if (device.currentValue("contact") == "open")
     if (device.currentValue("doorstate") != "moving") {
@@ -294,6 +299,7 @@ def push() {
         sendEvent(name: "doorstate", value: "moving")
 	sendEvent(name: "door", value: "closing")
         turnon()
+	runIn(timer(), set_doorstate_to_closed)
     }      
     else {   
         log.debug "no cmd sent, door is locked or moving"
