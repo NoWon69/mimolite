@@ -117,16 +117,17 @@ def timer() {
 def door_timer() {
     sendEvent(name: "door_timer", value: timer(), displayed: true)
 }
- 
-def swdelay(value) {
-    delay=(secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)))
+
+// ConfigurationReport- parameterNumber:11, size:1, value:30
+def delay() {
+    delay=parse(value)(secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)))
 }
 
-def sw_delay() {
+def swdelay() {
     log.info "sending switch delay code"    
-    if (swdelay() != null)
-        sendEvent(name: "momentary_switch_delay", value: swdelay(), displayed: true)
-    if (swdelay() == 0)
+    if (delay != null)
+        sendEvent(name: "momentary_switch_delay", value: (delay), displayed: true)
+    if (delay == 0)
         sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
 }
 
