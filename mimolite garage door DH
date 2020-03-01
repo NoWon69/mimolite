@@ -32,7 +32,7 @@
  *  03-01-2020 : added logic so the DH should not get out of sequence with the garage door and the garage door can not be activated unless fully open or closed and removed "doorstate" as it was redundant 
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 03/01/2020", namespace: "Hubitat", author: "scgs350") {
+    definition (name: "MIMOlite Garage Door Controller 03/01/2020 test", namespace: "Hubitat", author: "scgs350") {
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
@@ -117,7 +117,19 @@ def timer() {
 def door_timer() {
     sendEvent(name: "door_timer", value: timer(), displayed: true)
 }
-     
+ 
+def swdelay(value) {
+    delay=(secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)))
+}
+
+def sw_delay() {
+    log.info "sending switch delay code"    
+    if (swdelay() != null)
+        sendEvent(name: "momentary_switch_delay", value: swdelay(), displayed: true)
+    if (swdelay() == 0)
+        sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
+}
+
 def parse(String description) {
     if (logenable) log.debug "description is: ${description}"
     def result = null
@@ -146,12 +158,14 @@ def sensorValueEvent(Short value) {
     if (value) {
         sendEvent(name: "contact", value: "open")
         sendEvent(name: "door_timer", value: timer())
-        sendEvent(name:"lock", value:"Door is unlocked")        
+        sendEvent(name:"lock", value:"Door is unlocked")
+        sw_delay()
     } 
     else {
         sendEvent(name: "contact", value: "closed")
         sendEvent(name: "door", value: "closed")
         sendEvent(name: "door_timer", value: timer())
+        sw_delay()
 //        sendEvent(name: "doorstate", value: "Door is closed, open/on to open")
     }
 }
