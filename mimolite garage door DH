@@ -34,7 +34,7 @@
  */
 metadata {
 	// Automatically generated. Make future change here.
-    definition (name: "MIMOlite Garage Door Controller 02/28/2020", namespace: "Hubitat", author: "scgs350") {
+    definition (name: "MIMOlite Garage Door Controller 02/28/2020 swdelay", namespace: "Hubitat", author: "scgs350") {
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
