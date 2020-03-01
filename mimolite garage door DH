@@ -319,7 +319,12 @@ def ping() {
 }
 
 def refresh() {
-    log.debug "Refreshing" 
+    log.debug "Refreshing"
+    swdelay = secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
+    if (swdelay != null)
+        sendEvent(name: "momentary_switch_delay", value: (swdelay), displayed: true)
+    if (swdelay == 0)
+        sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
     return delayBetween([
         secureCmd(zwave.switchBinaryV1.switchBinaryGet()),
         secureCmd(zwave.sensorBinaryV1.sensorBinaryGet()),
@@ -330,7 +335,7 @@ def refresh() {
         secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 9)), 
 // get momentary switch setting        
         secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
-    ],500)
+    ],1000)
 }
 
 def logsOn() {
