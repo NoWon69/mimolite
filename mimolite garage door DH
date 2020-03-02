@@ -61,7 +61,7 @@ metadata {
         command "setSwitchDelay",[[title:"momentary switch delay", name:"select momentary switch delay 0(disabled),10,20,30 (*100ms) default 30(3 sec)", type:"NUMBER", description:"momentary switch delay", constraints:["NUMBER"]]]        
 //        command "getSwitchDelay"       
         
-fingerprint mfr: "132", deviceId: "273", prod:"1107", inClusters: "0x72,0x86,0x71,0x30,0x31,0x35,0x70,0x85,0x25", deviceJoinName: "mimolite garage door"
+fingerprint mfr: "132", deviceId: "273", prod:"1107", inClusters: "0x72,0x86,0x71,0x30,0x31,0x35,0x70,0x85,0x25,0x03", deviceJoinName: "mimolite garage door"
     }
 
 preferences {
