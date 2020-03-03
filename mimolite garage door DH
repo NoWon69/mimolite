@@ -198,13 +198,19 @@ def set_doorstate_to_opened() {
 
 def set_doorstate_to_closed() {
     sendEvent(name: "door", value: "closed")
-    secureCmd(zwave.basicV1.basicGet())
+    sendEvent(name: "switch", value: "off")    
+    return delayBetween([
+        zwave.basicV1.basicSet(value: 0x00).format(),
+        zwave.basicV1.basicGet().format(),
+        secureCmd(zwave.basicV1.basicGet()),        
+    ],1000) 
 }
 
 def on() {
     if (device.currentValue("lock") == "Door is unlocked" & (device.currentValue("contact") == "closed" & device.currentValue("switch") == "off")) {        
         log.info "Sending on open cmd to open garage door"
         sendEvent(name: "door", value: "opening")
+        sendEvent(name: "switch", value: "on")        
         runIn(timer(), set_doorstate_to_opened) 
         return delayBetween([      
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -214,6 +220,7 @@ def on() {
     if (device.currentValue("contact") == "open" & device.currentValue("door") != "opening" & device.currentValue("door") != "closing" & device.currentValue("switch") == "off") {
         log.info "Sending on close cmd to close garage door"
         sendEvent(name: "door", value: "closing")
+        sendEvent(name: "switch", value: "on")        
         runIn(timer(), set_doorstate_to_closed)
         return delayBetween([      
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -225,18 +232,13 @@ def on() {
     }
 }        
     
-def off() {
-    if (device.currentValue("switch") == "on" ) {    
+def off() {  
     log.info "Sending off cmd to door switch"
     sendEvent(name: "switch", value: "off")
     return delayBetween([
         zwave.basicV1.basicSet(value: 0x00).format(),
         zwave.basicV1.basicGet().format()
-    ],1000)
-    }    
-    else {
-        log.warn "no off cmd sent switch is already off"
-    }        
+    ],1000)       
 }
 
 def open() {
@@ -341,7 +343,7 @@ def configure() {
         secureCmd(zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId])),
 // sets switch to off
         zwave.basicV1.basicSet(value: 0x00).format(),
-        zwave.basicV1.basicGet().format()
+        zwave.basicV1.basicGet().format(),
     ],1000) 
     refresh()
 }
