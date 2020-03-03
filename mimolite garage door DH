@@ -111,7 +111,12 @@ def setSwitchDelay(value) {
 }
 
 def timer() {
-    timer=Integer.parseInt(doortimer)
+    if (doortimer == null) {
+        timer= 20
+    } 
+    else {
+        timer=Integer.parseInt(doortimer) 
+    }
 }
 
 def door_timer() {
@@ -327,6 +332,7 @@ def refresh() {
 def configure() {
     log.info "Configuring defaults" //setting up to monitor power alarm and actuator duration 
     log.info "momentay switch state enabled 3 sec"  
+    sendEvent(name: "door_timer", value: timer())
     sendEvent(name: "momentary_switch_delay", value: "3 sec")
     sendEvent(name: "switch", value: "off")
     sendEvent(name:"lock", value:"Door is unlocked") 
