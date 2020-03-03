@@ -32,7 +32,7 @@
  *  03-01-2020 : added logic so the DH should not get out of sequence with the garage door and the garage door can not be activated unless fully open or closed and removed "doorstate" as it was redundant 
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 03/01/2020", namespace: "Hubitat", author: "scgs350") {
+    definition (name: "MIMOlite Garage Door Controller 03/03/2020", namespace: "Hubitat", author: "scgs350") {
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
@@ -75,35 +75,35 @@ def setSwitchDelay(value) {
     if (value == null) {
         sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
         log.warn "incomplete parameter list supplied..."
-        log.info "momnentay switch enabled set to default 30 (3 sec)"        
+        log.info "momentay switch enabled set to default 30 (3 sec)"        
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
         ],500) }
     if (value == 0) {
         sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
-        log.info "set default 0 sec switch delay, momnentay state disabled"    
+        log.info "set default 0 sec switch delay, momentay state disabled"    
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
         ],500) }
     if (value == 1) {
         sendEvent(name: "momentary_switch_delay", value: "1 sec", displayed: true)
-        log.info "momnentay switch state enabled 1 sec"     
+        log.info "momentay switch state enabled 1 sec"     
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 10, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),   
         ],500) }
     if (value == 2) {
         sendEvent(name: "momentary_switch_delay", value: "2 sec", displayed: true)
-        log.info "momnentay switch state enabled 2 sec"    
+        log.info "momentay switch state enabled 2 sec"    
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
         ],500) }
     if (value == 3) {
         sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
-        log.info "momnentay switch state enabled 3 sec"      
+        log.info "momentay switch state enabled 3 sec"      
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)), 
@@ -152,7 +152,7 @@ def sensorValueEvent(Short value) {
         sendEvent(name: "contact", value: "closed")
         sendEvent(name: "door", value: "closed")
         sendEvent(name: "door_timer", value: timer())
-//        sendEvent(name: "doorstate", value: "Door is closed, open/on to open")
+        sendEvent(name: "switch", value: "off")
     }
 }
 
@@ -324,8 +324,10 @@ def refresh() {
 
 def configure() {
     log.info "Configuring defaults" //setting up to monitor power alarm and actuator duration 
-    log.info "momnentay switch state enabled 3 sec"  
-    sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
+    log.info "momentay switch state enabled 3 sec"  
+    sendEvent(name: "momentary_switch_delay", value: "3 sec")
+    sendEvent(name: "switch", value: "off")
+    sendEvent(name:"lock", value:"Door is unlocked") 
     return delayBetween([
 // enable analog alert thresholds for door contacts 0 disables   
         secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
@@ -337,7 +339,10 @@ def configure() {
         secureCmd(zwave.associationV1.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId])),
 // enable multivalue sensor updates to be sent to hub
         secureCmd(zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId])),
-    ],500) 
+// sets switch to off
+        zwave.basicV1.basicSet(value: 0x00).format(),
+        zwave.basicV1.basicGet().format()
+    ],1000) 
     refresh()
 }
 
