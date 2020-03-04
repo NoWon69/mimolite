@@ -89,7 +89,7 @@ def zwaveEvent(hubitat.zwave.commands.basicv1.BasicSet cmd) {
 // requests a report of the anologue input voltage
     delayBetween([zwave.sensorMultilevelV5.sensorMultilevelGet().format()])
 	[name: "contact", value: cmd.value ? "open" : "closed"]}
-    //[name: "contact", value: cmd.value ? "open" : "closed", type: "digital"]}
+    //[name: "contact", value: cmd.value ? "open" : "closed", type: "digital"],1000}
     
 def zwaveEvent(hubitat.zwave.commands.sensorbinaryv1.SensorBinaryReport cmd) {
 	log.debug "sent a sensorBinaryReport command"
@@ -138,7 +138,7 @@ def configure() {
         zwave.configurationV1.configurationSet(configurationValue: [x], parameterNumber: 11, size: 1).format()
 // gets the new parameter changes. not currently needed. (forces a null return value without a zwaveEvent funciton
         //zwave.configurationV1.configurationGet(parameterNumber: 11).format() 
-	])
+	],1000)
 }
 
 def on() {
@@ -147,7 +147,7 @@ def on() {
 		zwave.basicV1.basicSet(value: 0xFF).format(),
 // to make sure that it changed (the report is used elsewhere, look for switchBinaryReport()
         refresh()
-       ])
+       ],1000)
 }
 
 def off() {
@@ -156,7 +156,7 @@ def off() {
 		zwave.basicV1.basicSet(value: 0x00).format(),
 // to make sure that it changed (the report is used elsewhere, look for switchBinaryReport()
         refresh()
-	])
+	],1000)
 }
 
 def refresh() {
@@ -167,5 +167,5 @@ def refresh() {
 // requests a report of the anologue input voltage
         zwave.sensorMultilevelV5.sensorMultilevelGet().format()
 
-    ])
+    ],1000)
 }
