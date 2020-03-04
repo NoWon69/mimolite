@@ -332,7 +332,6 @@ def refresh() {
 def configure() {
     log.info "Configuring defaults" //setting up to monitor power alarm and actuator duration 
     log.info "momentay switch state enabled 3 sec"  
-//    door_timer()
     sendEvent(name: "door_timer", value: timer())
     sendEvent(name: "momentary_switch_delay", value: "3 sec")
     sendEvent(name: "switch", value: "off")
