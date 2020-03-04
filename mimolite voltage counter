@@ -16,7 +16,7 @@
  */
 metadata {
 	// Automatically generated. Make future change here.
-	definition (name: "FortrezZ MIMOlite voltage counter", namespace: "fortrezz", author: "FortrezZ, LLC") {
+	definition (name: "MIMOlite voltage counter", namespace: "fortrezz", author: "FortrezZ, LLC") {
 		capability "Configuration"
 		capability "Switch"
 		capability "Refresh"
@@ -142,12 +142,12 @@ def configure() {
 }
 
 def on() {
-	delayBetween([
-// physically changes the relay from on to off and requests a report of the relay
-		zwave.basicV1.basicSet(value: 0xFF).format(),
-// to make sure that it changed (the report is used elsewhere, look for switchBinaryReport()
-        refresh()
-       ],1000)
+// physically changes the relay to on and requests a report of the relay
+    sendEvent(name: "switch", value: "on") 
+    return delayBetween([      
+        zwave.basicV1.basicSet(value: 0xFF).format(),
+        zwave.basicV1.basicGet().format()                
+    ],1000)
 }
 
 def off() {
