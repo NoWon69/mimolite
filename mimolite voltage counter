@@ -42,13 +42,15 @@ def parse(String description) {
 	def result = null
 	def cmd = zwave.parse(description, [0x20: 1, 0x84: 1, 0x30: 1, 0x70: 1, 0x31: 5]) 
 //log.debug "command value is: $cmd.CMD"
-    if (cmd.CMD == "7105") {				//Mimo sent a power loss report
+//Mimo sent a power loss report
+    if (cmd.CMD == "7105") {
     	log.debug "Device lost power"
     	sendEvent(name: "powered", value: "powerOff", descriptionText: "$device.displayName lost power")
     } else {
     	sendEvent(name: "powered", value: "powerOn", descriptionText: "$device.displayName regained power")
     }
-    //log.debug "${device.currentValue('contact')}" // debug message to make sure the contact tile is working
+// debug message to make sure the contact tile is working
+    //log.debug "${device.currentValue('contact')}"
 	if (cmd) {
 		result = createEvent(zwaveEvent(cmd))
 	}
@@ -68,21 +70,25 @@ def zwaveEvent(hubitat.zwave.commands.switchbinaryv1.SwitchBinaryReport cmd) {
 log.debug "switchBinaryReport ${cmd}"
     if (cmd.value) // if the switch is on it will not be 0, so on = true
     {
-		return [name: "switch", value: "on"] // change switch value to on
+// change switch value to on
+		return [name: "switch", value: "on"]
     }
     else // if the switch sensor report says its off then do...
     {
-		return [name: "switch", value: "off"] // change switch value to off
+// change switch value to off
+		return [name: "switch", value: "off"]
     }
        
 }
 
 // working on next for the analogue and digital stuff.
-def zwaveEvent(hubitat.zwave.commands.basicv1.BasicSet cmd) // basic set is essentially our digital sensor for SIG1
+// basic set is essentially our digital sensor for SIG1
+def zwaveEvent(hubitat.zwave.commands.basicv1.BasicSet cmd)
 {
 	log.debug "sent a BasicSet command"
-    //refresh()  
-    delayBetween([zwave.sensorMultilevelV5.sensorMultilevelGet().format()])// requests a report of the anologue input voltage
+    //refresh() 
+// requests a report of the anologue input voltage
+    delayBetween([zwave.sensorMultilevelV5.sensorMultilevelGet().format()])
 	[name: "contact", value: cmd.value ? "open" : "closed"]}
     //[name: "contact", value: cmd.value ? "open" : "closed", type: "digital"]}
     
