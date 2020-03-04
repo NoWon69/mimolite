@@ -16,7 +16,7 @@
  */
 metadata {
 	// Automatically generated. Make future change here.
-	definition (name: "MIMOlite voltage counter", namespace: "fortrezz", author: "FortrezZ, LLC") {
+	definition (name: "MIMOlite voltage counter 03/04/2020", namespace: "fortrezz", author: "FortrezZ, LLC") {
 		capability "Configuration"
 		capability "Switch"
 		capability "Refresh"
@@ -32,7 +32,6 @@ metadata {
 	}
 
     preferences {
-        input ("version", "text", title: "Plugin Version 1.5", description:"", required: false, displayDuringSetup: true)
         input "RelaySwitchDelay", "decimal", title: "Delay between relay switch on and off in seconds. Only Numbers 0 to 3.0 allowed. 0 value will remove delay and allow relay to function as a standard switch", description: "Numbers 0 to 3.1 allowed.", defaultValue: 0, required: false, displayDuringSetup: true
     }
 }
@@ -90,12 +89,12 @@ def zwaveEvent(hubitat.zwave.commands.basicv1.BasicSet cmd) {
     delayBetween([zwave.sensorMultilevelV5.sensorMultilevelGet().format()])
 	[name: "contact", value: cmd.value ? "open" : "closed"]}
     //[name: "contact", value: cmd.value ? "open" : "closed", type: "digital"],1000}
-    
-def zwaveEvent(hubitat.zwave.commands.sensorbinaryv1.SensorBinaryReport cmd) {
-	log.debug "sent a sensorBinaryReport command"
-	refresh()    
-	[name: "contact", value: cmd.value ? "open" : "closed"]
-}
+//    
+//def zwaveEvent(hubitat.zwave.commands.sensorbinaryv1.SensorBinaryReport cmd) {
+//	log.debug "sent a sensorBinaryReport command"
+//	refresh()    
+//	[name: "contact", value: cmd.value ? "open" : "closed"]
+//}
 
 // sensorMultilevelReport is used to report the value of the analog voltage for SIG1
 def zwaveEvent (hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport cmd) {
@@ -126,18 +125,20 @@ def CalculateVoltage(ADCvalue) {
 def configure() {
     def x = 0;
     if (RelaySwitchDelay != null) {x = (RelaySwitchDelay*10).toInteger()}
-    log.debug "Configuring.... " //setting up to monitor power alarm and actuator duration
+//setting up to monitor power alarm and actuator duration
+    log.debug "Configuring.... " 
     delayBetween([
-// FYI: Group 3: If a power dropout occurs, the MIMOlite will send an Alarm Command Class report (if there is enough available residual power)
-		zwave.associationV1.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId]).format(),
-// periodically send a multilevel sensor report of the ADC analog voltage to the input        																							
-        zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId]).format(),
+// enable alarms to be sent to hub if a power dropout occurs, the MIMOlite will send an Alarm Command Class report (if there is enough available residual power) 
+        secureCmd(zwave.associationV1.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId])),
+// enable multivalue sensor updates to be sent to hub of the ADC analog voltage to the input     
+        secureCmd(zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId])),  
 // when the input is digitally triggered or untriggered, and a binary sensor report        
-        zwave.associationV1.associationSet(groupingIdentifier:4, nodeId:[zwaveHubNodeId]).format(),
-// configurationValue for parameterNumber means how many 100ms do you want the relay to wait before it cycles again / size should just be 1 (for 1 byte.)  
-        zwave.configurationV1.configurationSet(configurationValue: [x], parameterNumber: 11, size: 1).format()
-// gets the new parameter changes. not currently needed. (forces a null return value without a zwaveEvent funciton
-        //zwave.configurationV1.configurationGet(parameterNumber: 11).format() 
+        secureCmd(zwave.associationV1.associationSet(groupingIdentifier:4, nodeId:[zwaveHubNodeId])),        
+// sets momentary switch set 0-30 0 (disabled) 10 = 1 seconds configured default for 30 (3 sec)      
+        secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: (x), parameterNumber: 11, size: 1)),
+// get momentary switch setting
+        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
+        zwave.basicV1.basicGet().format()
 	],1000)
 }
 
@@ -151,21 +152,41 @@ def on() {
 }
 
 def off() {
-	delayBetween([
-// physically changes the relay from on to off and requests a report of the relay
-		zwave.basicV1.basicSet(value: 0x00).format(),
-// to make sure that it changed (the report is used elsewhere, look for switchBinaryReport()
-        refresh()
-	],1000)
+    log.info "Sending off cmd to door switch"
+    sendEvent(name: "switch", value: "off")
+    return delayBetween([
+        zwave.basicV1.basicSet(value: 0x00).format(),
+        zwave.basicV1.basicGet().format()
+    ],1000)  
 }
 
 def refresh() {
-    log.debug "refreshing!"
-    delayBetween([
-//requests a report of the relay to make sure that it changed (the report is used elsewhere, look for switchBinaryReport()
-        zwave.switchBinaryV1.switchBinaryGet().format(),
+    log.info "Refreshing" 
+    return delayBetween([
+        secureCmd(zwave.switchBinaryV1.switchBinaryGet()),
+        secureCmd(zwave.sensorBinaryV1.sensorBinaryGet()),
+        secureCmd(zwave.basicV1.basicGet()),
+// get alert thresholds setting        
+        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 8)),
+// get alarms setting        
+        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 9)), 
+// get momentary switch setting        
+        secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11)),
 // requests a report of the anologue input voltage
-        zwave.sensorMultilevelV5.sensorMultilevelGet().format()
-
+//        secureCmd(zwave.sensorMultilevelV1.meterPulseGet()),
+        secureCmd(zwave.sensorMultilevelV1.sensorMultilevelGet())
     ],1000)
 }
+
+def zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) {
+    log.info "ConfigurationReport- parameterNumber:${cmd.parameterNumber}, size:${cmd.size}, value:${cmd.scaledConfigurationValue}"
+}
+
+private secureCmd(cmd) {
+    if (getDataValue("zwaveSecurePairingComplete") == "true") {
+        return zwave.securityV1.securityMessageEncapsulation().encapsulate(cmd).format()
+    }
+    else {
+        return cmd.format()
+    }	
+}       
