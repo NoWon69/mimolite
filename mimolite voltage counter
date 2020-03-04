@@ -16,7 +16,7 @@
  */
 metadata {
 // Automatically generated. Make future change here.
-definition (name: "FortrezZ MIMOlite voltage counter", namespace: "fortrezz", author: "FortrezZ, LLC") {
+definition (name: "FortrezZ MIMOlite voltage counter 03/03/2020", namespace: "fortrezz", author: "FortrezZ, LLC") {
     capability "Configuration"
     capability "Switch"
     capability "Refresh"
