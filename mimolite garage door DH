@@ -143,7 +143,7 @@ def autoRefresh() {
     if (autorefresh == 4) {
         log.info "auto refresh every 3 hours" 
         sendEvent(name: "auto_refresh", value: "3 hours")
-        runEvery3Hour(refresh) 
+        runEvery3Hours(refresh) 
     } 
  }   
    
