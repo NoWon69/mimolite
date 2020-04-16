@@ -33,9 +33,9 @@
  *  04-15-2020 : fixed an error in refresh, added auto refresh, and auto close
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 04/15/2020", namespace: "Hubitat", author: "scgs350", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
-//  modified by "NoWon"
+    definition (name: "MIMOlite Garage Door Controller 04/15/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
     {
+        
         capability "Momentary"
         capability "Relay Switch"
         capability "Polling"
