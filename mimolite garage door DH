@@ -78,7 +78,7 @@ def autoClose() {
     autoclose = Integer.parseInt(autoclose)
     if (autoclose == null) {
         sendEvent(name: "auto_close", value: "disabled")        
-        log.info "auto close null disabled"
+        log.info "null auto close disabled"
         unschedule(close) 
     }
     if (autoclose == 0) {
@@ -116,7 +116,7 @@ def autoClose() {
 def autoRefresh() {
     autorefresh = Integer.parseInt(autorefresh)
     if (autorefresh == null) {
-        log.info "auto refresh null disabled"
+        log.info "null auto refresh disabled"
         sendEvent(name: "auto_refresh", value: "disabled") 
         unschedule(refresh)
     }
