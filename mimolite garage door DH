@@ -431,11 +431,9 @@ def configure() {
     sendEvent(name:"lock", value:"unlocked")
     sendEvent(name: "door_timer", value: timer())
     unschedule(close)
-    autoclose = 0
-    sendEvent(name: "auto_close", value: "disabled") 
+    sendEvent(name: "auto_close", value: "off") 
     unschedule(refresh)
-    autorefresh = 0
-    sendEvent(name: "auto_refresh", value: "disabled") 
+    sendEvent(name: "auto_refresh", value: "off") 
     return delayBetween([
 // enable analog alert thresholds for door contacts 0 disables   
         secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
