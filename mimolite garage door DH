@@ -267,7 +267,7 @@ def zwaveEvent(hubitat.zwave.Command cmd) {
 }
    
 def lock() {
-    if (device.currentValue("lock") == "unlocked" & device.currentValue("contact") == "closed") {    
+    if (device.currentValue("contact") == "closed") {    
     log.info "locked door"
     sendEvent(name:"lock", value:"locked")
     }
