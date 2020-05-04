@@ -293,7 +293,8 @@ def set_doorstate_to_opened() {
 
 def set_doorstate_to_closed() {
     log.info "door closed auto close off"    
-    sendEvent(name: "switch", value: "off")         
+    sendEvent(name: "switch", value: "off")
+    sendEvent(name: "auto_close", value: "off")
     unschedule(close) 
     return delayBetween([
         zwave.basicV1.basicSet(value: 0x00).format(),
