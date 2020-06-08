@@ -32,9 +32,10 @@
  *  03-01-2020 : added logic so the DH should not get out of sequence with the garage door and the garage door can not be activated unless fully open or closed and removed "doorstate" as it was redundant 
  *  04-15-2020 : fixed an error in refresh, added auto refresh, and auto close
  *  05-01-2020 : fixed an error in parsing, made auto close recurring(runEvery cmd time is not accurate more like run every less than), fixed a bug with manually opening door and auto close not firing, fixed the lock function not appearing on dashboard correctly
+ *  06-01-2020 : added automatic secondary door state check using the door timer and refresh
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 05/01/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
+    definition (name: "MIMOlite Garage Door Controller 06/01/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
     {        
         capability "Momentary"
         capability "Relay Switch"
@@ -52,7 +53,7 @@ metadata {
         
         attribute "powered", "string"
      
-        command "setSwitchDelay",[[title:"momentary switch delay", name:"select momentary switch delay 0(disabled),1,2 default(2 sec),3", type:"NUMBER", description:"momentary switch delay", constraints:["NUMBER"]]]               
+        command "setSwitchDelay",[[title:"momentary switch delay", name:"momentary switch delay 0(disabled),1 sec,2 sec(default),3 sec", type:"NUMBER", description:"momentary switch delay", constraints:["NUMBER"]]]               
         
         fingerprint mfr: "132", deviceId: "0x1000", prod:"1107", inClusters: "0x72,0x86,0x71,0x30,0x31,0x35,0x70,0x85,0x25,0x03", deviceJoinName: "mimolite garage door"
     }
@@ -60,143 +61,131 @@ metadata {
 preferences {
     input "doortimer", "enum", title:"door full open or close Time", required:false, defaultValue:20, options:[0:"disabled", 10:"10 sec", 20:"20 sec (default)", 30:"30 sec", 45:"45 sec", 60:"1 Minutes", 300:"5 Minutes", 600:"10 Minutes"]
     input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
-    input "autorefresh", "enum", title:"auto Refresh", required:false, defaultValue:0, options:[0:"disabled (default)", 1:"15 minutes", 2:"30 minutes", 3:"1 hour", 4:"3 hours"]    
-    input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled (default)", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
-    }
+    input "autorefresh", "enum", title:"auto Refresh", required:false, defaultValue:0, options:[0:"disabled", 1:"15 minutes", 2:"30 minutes", 3:"1 hour", 4:"3 hours"]    
+    input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
+    input name: "doorCheckEnable", type: "bool", title: "refresh after door full open or closed", defaultValue: false
+    input name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: false
+}
 }
 
-def autoClose() {   
-    autoclose = Integer.parseInt(autoclose)
-    if (autoclose == null) {
+def autoClose() {
+    if (autoclose == null)
+        autoClose = 0
+    else 
+        autoClose = Integer.parseInt(autoclose)      
+    if (autoClose == 0) {
+        if (txtEnable) log.info "auto close disabled"        
         sendEvent(name: "auto_close", value: "disabled")        
-        log.info "auto close null disabled"
-        unschedule(close) 
+        unschedule(close)
     }
-    if (autoclose == 0) {
-        sendEvent(name: "auto_close", value: "disabled")        
-        log.info "auto close disabled"
-        unschedule(close) 
-    }
-    if (autoclose == 5) {
+    if (autoClose == 5) {
+        if (txtEnable) log.info "auto close 5 minutes"        
         sendEvent(name: "auto_close", value: "5 minutes")
-        log.info "auto close 5 minutes"
-        runEvery5Minutes(close) 
+        runEvery5Minutes(close)
     }    
-    if (autoclose == 10) {
+    if (autoClose == 10) {
+        if (txtEnable) log.info "auto close 10 minutes"        
         sendEvent(name: "auto_close", value: "10 minutes")
-        log.info "auto close 5 minutes"
-        runEvery10Minutes(close) 
+        runEvery10Minutes(close)
     }
-    if (autoclose == 15) {
+    if (autoClose == 15) {
+        if (txtEnable) log.info "auto close 15 minutes"        
         sendEvent(name: "auto_close", value: "15 minutes")
-        log.info "auto close 15 minutes"
-        runEvery15Minutes(close) 
+        runEvery15Minutes(close)
     }  
-    if (autoclose == 30) {
+    if (autoClose == 30) {
+        if (txtEnable) log.info "auto close 30 minutes"        
         sendEvent(name: "auto_close", value: "30 minutes")
-        log.info "auto close 15 minutes"
-        runEvery30Minutes(close) 
+        runEvery30Minutes(close)
     }
-    if (autoclose == 60) {
+    if (autoClose == 60) {
+        if (txtEnable) log.info "auto close 1 hour"        
         sendEvent(name: "auto_close", value: "1 hour")
-        log.info "auto close 1 hour"
-        runEvery1Hour(close) 
+        runEvery1Hour(close)
     }
-    if (autoclose == 180) {
+    if (autoClose == 180) {
+        if (txtEnable) log.info "auto close 3 hours"        
         sendEvent(name: "auto_close", value: "3 hours")
-        log.info "auto close 3 hours"
-        runEvery3Hours(close) 
+        runEvery3Hours(close)
+    }
+    if (device.currentValue("contact") == "closed") {
+        if (txtEnable) log.info "auto close off because door is closed"
+        unschedule(close)
     }
 }
 
-def autoRefresh() {  
-    autorefresh = Integer.parseInt(autorefresh)
-    if (autorefresh == null) {
-        log.info "auto refresh null disabled"
-        sendEvent(name: "auto_refresh", value: "disabled") 
-        unschedule(refresh)
-    }
-    if (autorefresh == 0) {
-        log.info "auto refresh disabled"
+def autoRefresh() {   
+    if (autorefresh == null)
+        autoRefresh = 0
+    else 
+        autoRefresh = Integer.parseInt(autorefresh)  
+    if (autoRefresh == 0) {
+        if (txtEnable) log.info "auto refresh disabled"
         sendEvent(name: "auto_refresh", value: "disabled")
         unschedule(refresh) 
     }
-    if (autorefresh == 1) {
+    if (autoRefresh == 1) {
         log.info "auto refresh every 15 minutes"
         sendEvent(name: "auto_refresh", value: "15 minutes")
         runEvery15Minutes(refresh) 
     }
-    if (autorefresh == 2) {
-        log.info "auto refresh every 30 minutes" 
+    if (autoRefresh == 2) {
+        if (txtEnable) log.info "auto refresh every 30 minutes" 
         sendEvent(name: "auto_refresh", value: "30 minutes")
         runEvery30Minutes(refresh) 
     }
-    if (autorefresh == 3) {
-        log.info "auto refresh every 1 hour"
+    if (autoRefresh == 3) {
+        if (txtEnable) log.info "auto refresh every 1 hour"
         sendEvent(name: "auto_refresh", value: "1 hour")
         runEvery1Hour(refresh)
     }
-    if (autorefresh == 4) {
-        log.info "auto refresh every 3 hours" 
+    if (autoRefresh == 4) {
+        if (txtEnable) log.info "auto refresh every 3 hours" 
         sendEvent(name: "auto_refresh", value: "3 hours")
         runEvery3Hours(refresh) 
     } 
  }   
-   
+ 
 def setSwitchDelay(value) {
     if (value == null) {
         sendEvent(name: "momentary_switch_delay", value: "2 sec", displayed: true)
-        log.warn "incomplete parameter list supplied..."
-        log.info "momentay switch enabled set to default 20 (2 sec)"        
+        if (txtEnable) log.warn "incomplete parameter list supplied... momentay switch enabled set to default 20 (2 sec)"        
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
-        ],500) 
+        ],1000) 
     }
     if (value == 0) {
         sendEvent(name: "momentary_switch_delay", value: "disabled", displayed: true)
-        log.info "set default 0 sec switch delay, momentay state disabled"    
+        if (txtEnable) log.info "set default 0 sec switch delay, momentay state disabled"    
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
-        ],500) 
+        ],1000) 
     }
     if (value == 1) {
         sendEvent(name: "momentary_switch_delay", value: "1 sec", displayed: true)
-        log.info "momentay switch state enabled 1 sec"     
+        if (txtEnable) log.info "momentay switch state enabled 1 sec"     
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 10, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))   
-        ],500) }
+        ],1000) }
     if (value == 2) {
         sendEvent(name: "momentary_switch_delay", value: "2 sec", displayed: true)
-        log.info "momentay switch state enabled 2 sec"    
+        if (txtEnable) log.info "momentay switch state enabled 2 sec"    
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
-        ],500) 
+        ],1000) 
     }
     if (value == 3) {
         sendEvent(name: "momentary_switch_delay", value: "3 sec", displayed: true)
-        log.info "momentay switch state enabled 3 sec"      
+        if (txtEnable) log.info "momentay switch state enabled 3 sec"      
         return delayBetween([
             secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 30, parameterNumber: 11, size: 1)),
             secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 11))
-        ],500) 
+        ],1000) 
     }
-}
-
-def timer() {
-    if (doortimer == null) {
-        timer=20
-    } 
-    else {
-        timer=Integer.parseInt(doortimer)
-    }
-}
-
-def door_timer() {
-    sendEvent(name: "door_timer", value: timer())
 }
 
 def parse(String description) {
@@ -220,7 +209,7 @@ def parse(String description) {
     } else {
         if (logEnable) log.debug "Unhandled command: ${description}"
     }
-} else {
+    } else {
         if (logEnable) log.debug "Unparsed command: ${description}"
 }
 return result
@@ -229,15 +218,14 @@ return result
 def sensorValueEvent(Short value) {
     if (value) {
         sendEvent(name: "contact", value: "open")
-        sendEvent(name: "door_timer", value: timer())
-        sendEvent(name:"lock", value:"unlocked") 
-        set_doorstate_to_opened()
+        sendEvent(name:"lock", value:"unlocked")
+        doorStateTimer()
     } 
     else {
         sendEvent(name: "contact", value: "closed")
         sendEvent(name: "door", value: "closed")
-        sendEvent(name: "door_timer", value: timer())
-        set_doorstate_to_closed()
+        sendEvent(name: "switch", value: "off")       
+        doorStateTimer()
     }
 }
     
@@ -268,7 +256,7 @@ def zwaveEvent(hubitat.zwave.Command cmd) {
    
 def lock() {
     if (device.currentValue("contact") == "closed") {    
-    log.info "locked door"
+    if (txtEnable) log.info "locked door"
     sendEvent(name:"lock", value:"locked")
     }
     else {
@@ -277,42 +265,62 @@ def lock() {
 }
 
 def unlock() {
-    log.info "unlocked door"
+    if (txtEnable) log.info "unlocked door"
     sendEvent(name:"lock", value:"unlocked")
 }
 
-def set_doorstate_to_opened() {
-    log.info "door opened"       
-    runIn(timer(), manualOpen)
-    autoClose()
-    return delayBetween([   
-        secureCmd(zwave.basicV1.basicGet()),
-        secureCmd(zwave.sensorBinaryV1.sensorBinaryGet())
-    ],1000) 
+// used for manually opening and closing door to confirm door state & prevent continuously refresh loop
+def doorStateTimer() {
+    if (txtEnable) log.info "door state timer"    
+    if (doortimer == null) {
+        doortimer=20
+    } 
+    else {
+        doortimer = Integer.parseInt(doortimer)
+    }
+    sendEvent(name: "door_timer", value: doortimer)
+    runIn(doortimer, doorState)
 }
 
-def set_doorstate_to_closed() {
-    log.info "door closed auto close off"    
-    sendEvent(name: "switch", value: "off")
-    sendEvent(name: "auto_close", value: "off")
-    unschedule(close) 
-    return delayBetween([
-        zwave.basicV1.basicSet(value: 0x00).format(),
-        zwave.basicV1.basicGet().format(),
-        secureCmd(zwave.basicV1.basicGet()),
-        secureCmd(zwave.sensorBinaryV1.sensorBinaryGet())        
-    ],1000) 
+// used to do a refresh after a open/close command to confirm door state
+def check_doorState() {
+    if (txtEnable) log.info "running check door state"
+    if (doortimer == null) {
+        doortimer=20
+    }
+    else {
+        doortimer=Integer.parseInt(doortimer)
+    }
+    sendEvent(name: "door_timer", value: doortimer)
+    if(doorCheckEnable) runIn(doortimer, refresh)
+    runIn(doortimer+5, doorState)
 }
 
-def manualOpen() {
-    sendEvent(name: "door", value: "open")
-}    
+def doorState() {
+    if (txtEnable) log.info "getting door state"
+    if (device.currentValue("contact") == "closed") {
+        sendEvent(name: "door", value: "closed")
+        sendEvent(name: "switch", value: "off")
+        log.info "door state closed"
+        autoClose()
+        autoRefresh()      
+//        unschedule(close)
+    }
+    else {
+        autoClose()
+        autoRefresh() 
+        sendEvent(name: "door", value: "open")
+        sendEvent(name:"lock", value:"unlocked")
+        log.info "door state open"
+    }      
+}
 
 def on() {
     if (device.currentValue("lock") == "unlocked" & (device.currentValue("contact") == "closed" & device.currentValue("switch") == "off")) {        
         log.info "Sending ON open cmd to open garage door"
         sendEvent(name: "door", value: "opening")
-        sendEvent(name: "switch", value: "on")        
+        sendEvent(name: "switch", value: "on")
+        check_doorState()
         return delayBetween([      
             zwave.basicV1.basicSet(value: 0xFF).format(),
             zwave.basicV1.basicGet().format()                
@@ -321,7 +329,8 @@ def on() {
     if (device.currentValue("contact") == "open" & device.currentValue("door") != "closed" & device.currentValue("switch") == "off") {
         log.info "Sending ON close cmd to close garage door"
         sendEvent(name: "door", value: "closing")
-        sendEvent(name: "switch", value: "on")        
+        sendEvent(name: "switch", value: "on")
+        check_doorState()
         return delayBetween([      
             zwave.basicV1.basicSet(value: 0xFF).format(),
             zwave.basicV1.basicGet().format() 
@@ -329,6 +338,7 @@ def on() {
     }
     else {   
         log.warn "no on cmd sent, door is locked or moving or switch is already on"
+        check_doorState()        
     }
 }        
     
@@ -346,6 +356,7 @@ def open() {
         log.info "Sending OPEN cmd to open garage door"
         sendEvent(name: "door", value: "opening")
         sendEvent(name: "contact", value: "open")
+        check_doorState()
         return delayBetween([ 
             zwave.basicV1.basicSet(value: 0x00).format(),        
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -354,13 +365,15 @@ def open() {
     }    
     else {
         log.warn "no open cmd sent door is already open or locked"
+        check_doorState()
     }
 }
 
 def close() {
     if (device.currentValue("contact") == "open" & device.currentValue("door") == "open") {
         log.info "Sending CLOSE cmd to close garage door"
-        sendEvent(name: "door", value: "closing")    
+        sendEvent(name: "door", value: "closing")
+        check_doorState()
         return delayBetween([ 
             zwave.basicV1.basicSet(value: 0x00).format(),        
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -368,7 +381,8 @@ def close() {
         ],1000)
     }
     else {
-        log.warn "No close cmd sent door is already closed or in transit"        
+        log.warn "No close cmd sent door is already closed or in transit"
+        check_doorState() 
     }
 }
 
@@ -376,6 +390,7 @@ def push() {
     if (device.currentValue("lock") == "unlocked" & device.currentValue("contact") == "closed") {
         log.info "Sending PUSH open event to open garage door"
         sendEvent(name: "door", value: "opening")
+        check_doorState()
         return delayBetween([ 
             zwave.basicV1.basicSet(value: 0x00).format(),        
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -385,6 +400,7 @@ def push() {
     if (device.currentValue("contact") == "open" & device.currentValue("door") == "open") {
         log.info "Sending PUSH close event to close garage door"
         sendEvent(name: "door", value: "closing")
+        check_doorState()
         return delayBetween([ 
             zwave.basicV1.basicSet(value: 0x00).format(),        
             zwave.basicV1.basicSet(value: 0xFF).format(),
@@ -393,6 +409,7 @@ def push() {
     }      
     else {   
         log.warn "no push cmd sent, door is locked or moving"
+        check_doorState()        
     }
 }        
 
@@ -405,9 +422,9 @@ def ping() {
     refresh()
 }
 
-def refresh() {
+def refresh() {  
     log.info "Refreshing"
-    sendEvent(name: "door_timer", value: timer())
+//    doorState()
     autoRefresh()
     return delayBetween([
         secureCmd(zwave.switchBinaryV1.switchBinaryGet()),
@@ -430,11 +447,9 @@ def configure() {
     sendEvent(name: "momentary_switch_delay", value: "2 sec")
     sendEvent(name: "switch", value: "off")
     sendEvent(name:"lock", value:"unlocked")
-    sendEvent(name: "door_timer", value: timer())
-    unschedule(close)
-    sendEvent(name: "auto_close", value: "off") 
-    unschedule(refresh)
-    sendEvent(name: "auto_refresh", value: "off") 
+    check_doorState()
+    autoClose()
+    autoRefresh()
     return delayBetween([
 // enable analog alert thresholds for door contacts 0 disables   
         secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
@@ -458,7 +473,7 @@ def getSwitchDelay() {
 }	
 
 def zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) {
-        log.info "ConfigurationReport- parameterNumber:${cmd.parameterNumber}, size:${cmd.size}, value:${cmd.scaledConfigurationValue}"
+        if (txtEnable) log.info "ConfigurationReport- parameterNumber:${cmd.parameterNumber}, size:${cmd.size}, value:${cmd.scaledConfigurationValue}"
 }
 
 private secureCmd(cmd) {
