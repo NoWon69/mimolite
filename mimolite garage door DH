@@ -226,6 +226,7 @@ def sensorValueEvent(Short value) {
         sendEvent(name: "door", value: "closed")
         sendEvent(name: "switch", value: "off")       
         doorStateTimer()
+        if (logEnable) runIn(1800,logsOff)
     }
 }
     
@@ -424,6 +425,7 @@ def ping() {
 
 def refresh() {  
     log.info "Refreshing"
+    if (logEnable) runIn(1800,logsOff)    
 //    doorState()
     autoRefresh()
     return delayBetween([
@@ -441,9 +443,15 @@ def refresh() {
     ],1000) 
 }
 
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("logEnable",[value:"false",type:"bool"])
+}
+
 def configure() {
     log.info "Configuring defaults" 
-    log.info "momentay switch state enabled 2 sec"  
+    log.info "momentay switch state enabled 2 sec" 
+    if (logEnable) runIn(1800,logsOff)
     sendEvent(name: "momentary_switch_delay", value: "2 sec")
     sendEvent(name: "switch", value: "off")
     sendEvent(name:"lock", value:"unlocked")
