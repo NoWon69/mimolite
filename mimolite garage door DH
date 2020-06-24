@@ -65,7 +65,7 @@ preferences {
     input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
     input name: "doorCheckEnable", type: "bool", title: "refresh after door full open or closed", defaultValue: false
     input name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: false
-}
+    }
 }
 
 def autoClose() {
