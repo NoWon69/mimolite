@@ -33,9 +33,10 @@
  *  04-15-2020 : fixed an error in refresh, added auto refresh, and auto close
  *  05-01-2020 : fixed an error in parsing, made auto close recurring(runEvery cmd time is not accurate more like run every less than), fixed a bug with manually opening door and auto close not firing, fixed the lock function not appearing on dashboard correctly
  *  06-01-2020 : added automatic secondary door state check using the door timer and refresh
+ *  06-22-2020 : added timed log debug off
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 06/01/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
+    definition (name: "MIMOlite Garage Door Controller 06/22/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
     {        
         capability "Momentary"
         capability "Relay Switch"
@@ -65,7 +66,7 @@ preferences {
     input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
     input name: "doorCheckEnable", type: "bool", title: "refresh after door full open or closed", defaultValue: false
     input name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: false
-    }
+}
 }
 
 def autoClose() {
@@ -220,13 +221,13 @@ def sensorValueEvent(Short value) {
         sendEvent(name: "contact", value: "open")
         sendEvent(name:"lock", value:"unlocked")
         doorStateTimer()
+        if (logEnable) runIn(1800,logsOff)
     } 
     else {
         sendEvent(name: "contact", value: "closed")
         sendEvent(name: "door", value: "closed")
         sendEvent(name: "switch", value: "off")       
         doorStateTimer()
-        if (logEnable) runIn(1800,logsOff)
     }
 }
     
