@@ -34,7 +34,7 @@
  *  05-01-2020 : fixed an error in parsing, made auto close recurring(runEvery cmd time is not accurate more like run every less than), fixed a bug with manually opening door and auto close not firing, fixed the lock function not appearing on dashboard correctly
  *  06-01-2020 : added automatic secondary door state check using the door timer and refresh
  *  06-22-2020 : added 30 minute log debug off
- *  01-01-2021 : added additional auto refresh time options to compensate for faulty SIG1 magnetic dry contact
+ *  01-01-2021 : added additional auto refresh time options to compensate for faulty SIG1 magnetic dry contact,  changed parameterNumber 9 value from 5 to 3
  */
 metadata {
     definition (name: "MIMOlite Garage Door Controller 01/01/2021", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
