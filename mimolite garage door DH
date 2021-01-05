@@ -475,7 +475,7 @@ def configure() {
 // enable analog alert thresholds for door contacts 0 disables   
         secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 8, size: 1)),
 // tell device to send multivalue sensor updates every 1 = 10 seconds 
-        secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 5, parameterNumber: 9, size: 1)),
+        secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 3, parameterNumber: 9, size: 1)),
 // sets momentary switch set 0-30 0 (disabled) 10 = 1 seconds configured default for 20 (2 sec)      
         secureCmd(zwave.configurationV1.configurationSet(scaledConfigurationValue: 20, parameterNumber: 11, size: 1)),
 // enable alarms to be sent to hub  
