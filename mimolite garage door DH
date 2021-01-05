@@ -33,10 +33,11 @@
  *  04-15-2020 : fixed an error in refresh, added auto refresh, and auto close
  *  05-01-2020 : fixed an error in parsing, made auto close recurring(runEvery cmd time is not accurate more like run every less than), fixed a bug with manually opening door and auto close not firing, fixed the lock function not appearing on dashboard correctly
  *  06-01-2020 : added automatic secondary door state check using the door timer and refresh
- *  06-22-2020 : added timed log debug off
+ *  06-22-2020 : added 30 minute log debug off
+ *  01-01-2021 : added additional auto refresh time options to compensate for faulty SIG1 magnetic dry contact
  */
 metadata {
-    definition (name: "MIMOlite Garage Door Controller 06/22/2020", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
+    definition (name: "MIMOlite Garage Door Controller 01/01/2021", namespace: "Hubitat", author: "scgs350", modified: "NoWon", importUrl: "https://raw.githubusercontent.com/NoWon69/mimolite/master/mimolite%20garage%20door%20DH") 
     {        
         capability "Momentary"
         capability "Relay Switch"
@@ -61,9 +62,9 @@ metadata {
 
 preferences {
     input "doortimer", "enum", title:"door full open or close Time", required:false, defaultValue:20, options:[0:"disabled", 10:"10 sec", 20:"20 sec (default)", 30:"30 sec", 45:"45 sec", 60:"1 Minutes", 300:"5 Minutes", 600:"10 Minutes"]
-    input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
-    input "autorefresh", "enum", title:"auto Refresh", required:false, defaultValue:0, options:[0:"disabled", 1:"15 minutes", 2:"30 minutes", 3:"1 hour", 4:"3 hours"]    
-    input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
+    input name: "logEnable", type: "bool", title: "Enable 30 min debug logging", defaultValue: false
+    input "autorefresh", "enum", title:"auto refresh every?", required:false, defaultValue:0, options:[0:"disabled (default)", 1:"5 minutes", 2:"10 minutes", 3:"15 minutes", 4:"30 minutes", 5:"1 hour", 6:"3 hours"]        
+    input "autoclose", "enum", title:"auto close", required:false, defaultValue:0, options:[0:"disabled (default)", 5:"5 minutes", 10:"10 minutes", 15:"15 minutes", 30:"30 minutes", 60:"1 hour", 180:"3 hours"]
     input name: "doorCheckEnable", type: "bool", title: "refresh after door full open or closed", defaultValue: false
     input name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: false
 }
@@ -126,21 +127,31 @@ def autoRefresh() {
         unschedule(refresh) 
     }
     if (autoRefresh == 1) {
+        log.info "auto refresh every 5 minutes"
+        sendEvent(name: "auto_refresh", value: "5 minutes")
+        runEvery5Minutes(refresh) 
+    }
+    if (autoRefresh == 2) {
+        log.info "auto refresh every 10 minutes"
+        sendEvent(name: "auto_refresh", value: "10 minutes")
+        runEvery10Minutes(refresh) 
+    }
+    if (autoRefresh == 3) {
         log.info "auto refresh every 15 minutes"
         sendEvent(name: "auto_refresh", value: "15 minutes")
         runEvery15Minutes(refresh) 
     }
-    if (autoRefresh == 2) {
+    if (autoRefresh == 4) {
         if (txtEnable) log.info "auto refresh every 30 minutes" 
         sendEvent(name: "auto_refresh", value: "30 minutes")
         runEvery30Minutes(refresh) 
     }
-    if (autoRefresh == 3) {
+    if (autoRefresh == 5) {
         if (txtEnable) log.info "auto refresh every 1 hour"
         sendEvent(name: "auto_refresh", value: "1 hour")
         runEvery1Hour(refresh)
     }
-    if (autoRefresh == 4) {
+    if (autoRefresh == 6) {
         if (txtEnable) log.info "auto refresh every 3 hours" 
         sendEvent(name: "auto_refresh", value: "3 hours")
         runEvery3Hours(refresh) 
@@ -227,7 +238,7 @@ def sensorValueEvent(Short value) {
         sendEvent(name: "contact", value: "closed")
         sendEvent(name: "door", value: "closed")
         sendEvent(name: "switch", value: "off")       
-        doorStateTimer()
+//        doorStateTimer()
     }
 }
     
@@ -275,7 +286,7 @@ def unlock() {
 def doorStateTimer() {
     if (txtEnable) log.info "door state timer"    
     if (doortimer == null) {
-        doortimer=20
+        doortimer=30
     } 
     else {
         doortimer = Integer.parseInt(doortimer)
@@ -288,7 +299,7 @@ def doorStateTimer() {
 def check_doorState() {
     if (txtEnable) log.info "running check door state"
     if (doortimer == null) {
-        doortimer=20
+        doortimer=30
     }
     else {
         doortimer=Integer.parseInt(doortimer)
@@ -430,10 +441,11 @@ def refresh() {
 //    doorState()
     autoRefresh()
     return delayBetween([
+// get switch state
         secureCmd(zwave.switchBinaryV1.switchBinaryGet()),
- // get sig1 input door contact state             
+ // get sig1 door magnetic dry contact state             
         secureCmd(zwave.sensorBinaryV1.sensorBinaryGet()),       
-//
+// get switch state
         secureCmd(zwave.basicV1.basicGet()),
 // get alert thresholds setting        
         secureCmd(zwave.configurationV1.configurationGet(parameterNumber: 8)),
@@ -482,7 +494,7 @@ def getSwitchDelay() {
 }	
 
 def zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) {
-        if (txtEnable) log.info "ConfigurationReport- parameterNumber:${cmd.parameterNumber}, size:${cmd.size}, value:${cmd.scaledConfigurationValue}"
+    if (txtEnable) log.info "ConfigurationReport- parameterNumber:${cmd.parameterNumber}, size:${cmd.size}, value:${cmd.scaledConfigurationValue}"
 }
 
 private secureCmd(cmd) {
